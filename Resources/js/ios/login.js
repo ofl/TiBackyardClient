@@ -43,7 +43,7 @@
           success: _logOut
         });
         url = "" + GLOBAL.API_URL + "/sessions";
-        network.requestDelete(url, {
+        network.request('DELETE', url, {
           auth_token: GLOBAL.user.auth_token
         });
       } else {

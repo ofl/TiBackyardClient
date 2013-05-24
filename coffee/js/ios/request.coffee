@@ -7,6 +7,9 @@ createWindow = (tab) ->
   window = Titanium.UI.createWindow
     title: 'Request'
 
+  navActInd = Titanium.UI.createActivityIndicator()
+  window.setRightNavButton(navActInd)
+
   tableView = Ti.UI.createTableView
     style: Ti.UI.iPhone.TableViewStyle.GROUPED
     rowHeight: 44  
@@ -53,6 +56,11 @@ createWindow = (tab) ->
     data: {status: 404, auth_token: GLOBAL.user.auth_token}
 
   rows.push Ti.UI.createTableViewRow
+    title: 'Time out'
+    url: "#{GLOBAL.API_URL}/tests"
+    data: {status: 408, auth_token: GLOBAL.user.auth_token}
+
+  rows.push Ti.UI.createTableViewRow
     title: 'XML'
     url: "#{GLOBAL.API_URL}/tests"
     data: {status: 415, auth_token: GLOBAL.user.auth_token}
@@ -90,6 +98,7 @@ createWindow = (tab) ->
     network = new Network({
       success: _onSuccess
       error: _onError
+      indicator: navActInd
       })
     network.request method, e.row.url, e.row.data    
     return

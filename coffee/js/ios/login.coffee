@@ -45,7 +45,7 @@ createWindow = (tab) ->
         success: _logOut
         })
       url = "#{GLOBAL.API_URL}/sessions"
-      network.requestDelete url, {auth_token: GLOBAL.user.auth_token}      
+      network.request 'DELETE', url, {auth_token: GLOBAL.user.auth_token}      
     else
       Ti.Platform.openURL("http://#{GLOBAL.HOST}/auth/facebook")
     return

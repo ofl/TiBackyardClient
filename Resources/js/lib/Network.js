@@ -19,7 +19,7 @@
         hide: function() {}
       };
       this.xhr = Ti.Network.createHTTPClient();
-      this.xhr.setTimeout(10000);
+      this.xhr.setTimeout(5000);
       this.xhr.onload = function() {
         var status_code;
         try {
@@ -30,11 +30,11 @@
           } else {
             _success(status_code, {});
           }
-        } catch (e) {
-          console.log(this.responseText);
+        } catch (err) {
+          console.log(err);
           _error(null, {
             success: false,
-            errors: ['Json parse error.']
+            errors: [err.message]
           });
         } finally {
           that.indicator.hide();
@@ -43,6 +43,7 @@
       };
       this.xhr.onerror = function(e) {
         var json, status_code;
+        console.log(e.error);
         try {
           status_code = that.xhr.status;
           if (status_code) {
@@ -50,15 +51,15 @@
           } else {
             json = {
               success: false,
-              errors: ['Network Error.']
+              errors: [e.error]
             };
           }
           _error(status_code, json);
-        } catch (e) {
-          console.log(this.responseText);
+        } catch (err) {
+          console.log(err);
           _error(null, {
             success: false,
-            errors: ['Json parse error.']
+            errors: [err.message]
           });
         } finally {
           that.indicator.hide();

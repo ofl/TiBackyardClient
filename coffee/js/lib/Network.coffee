@@ -13,7 +13,7 @@ class Network
     }
 
     @xhr = Ti.Network.createHTTPClient()
-    @xhr.setTimeout 10000
+    @xhr.setTimeout 5000
         
     # status code 200 ~ 399
     @xhr.onload = ()->
@@ -24,9 +24,9 @@ class Network
           _success status_code, JSON.parse(this.responseText)
         else
           _success status_code, {}
-      catch e
-        console.log this.responseText
-        _error null, {success: false, errors: ['Json parse error.']}
+      catch err
+        console.log err
+        _error null, {success: false, errors: [err.message]}
       finally
         that.indicator.hide()
         that.release()
@@ -34,16 +34,17 @@ class Network
       
     # status code 400 ~ , network error, timeout.. 
     @xhr.onerror = (e)->
+      console.log e.error
       try
         status_code = that.xhr.status
         if status_code
           json = JSON.parse(this.responseText)
         else
-          json = {success: false, errors: ['Network Error.']}
+          json = {success: false, errors: [e.error]}
         _error status_code, json
-      catch e 
-        console.log this.responseText
-        _error null, {success: false, errors: ['Json parse error.']}
+      catch err
+        console.log err
+        _error null, {success: false, errors: [err.message]}
       finally
         that.indicator.hide()
         that.release()
