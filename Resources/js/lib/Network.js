@@ -10,7 +10,7 @@
       var that, _error, _onreadystatechange, _progress, _success;
       _success = option.success || function() {};
       _error = option.error || function(status, errors) {
-        console.log("" + status + ":" + (errors.join(',')));
+        console.log("" + status + ":" + errors);
       };
       _progress = option.progress || function() {};
       _onreadystatechange = option.onreadystatechange || function() {};
@@ -22,6 +22,7 @@
       this.xhr.setTimeout(5000);
       this.xhr.onload = function() {
         var status_code;
+        console.log(this.responseText);
         try {
           status_code = that.xhr.status;
           console.log(this.responseText);
@@ -43,6 +44,7 @@
       };
       this.xhr.onerror = function(e) {
         var json, status_code;
+        console.log(this.responseText);
         console.log(e.error);
         try {
           status_code = that.xhr.status;
@@ -86,8 +88,13 @@
       if (method !== 'POST') {
         this.xhr.setRequestHeader("X-Http-Method-Override", method);
       }
-      this.xhr.setRequestHeader("content-type", "application/json");
+      this.xhr.setRequestHeader("Content-Type", "application/json");
       this.xhr.send(JSON.stringify(data));
+    };
+
+    Network.prototype.requestUpload = function(url, data) {
+      this.xhr.open('POST', url);
+      this.xhr.send(data);
     };
 
     Network.prototype.requestDownload = function(url, path) {
@@ -113,6 +120,9 @@
         case 'PUT':
         case 'DELETE':
           this.requestPost(url, data, method);
+          break;
+        case 'UPLOAD':
+          this.requestUpload(url, data);
           break;
         case 'DOWNLOAD':
           this.requestDownload(url, path);

@@ -2,41 +2,108 @@ createWindow = (tab) ->
   Network = require 'js/lib/Network'
   GLOBAL = require 'js/lib/global'
 
+  imageBlob = null
+
+
 # UI
 
   window = Titanium.UI.createWindow
     title: 'Login'
 
-  table = Ti.UI.createTableView
-    style: Ti.UI.iPhone.TableViewStyle.GROUPED
-    rowHeight: 44  
-  window.add(table)
+  photoButton = Ti.UI.createButton
+    systemButton: Titanium.UI.iPhone.SystemButton.CAMERA
+  window.setRightNavButton photoButton
 
-  row = Ti.UI.createTableViewRow
-    title: 'Login via Facebook'
-    color: 'green'
-
-  table.setData [row]
+  tableView = Ti.UI.createTableView
+    editable: true
+    rowHeight: 50
+  window.add(tableView)
 
 # Functions
 
-  _updateRowTitle = ()->
-    if Ti.App.Properties.getBool 'is_logged_in'
-      row.title = 'Logout'
-      row.color = 'green'
-    else
-      row.title = 'Login via Facebook'
-      row.color = 'red'
+  _createRow = (data)->
+    row = Ti.UI.createTableViewRow
+      id: data.id
+    row.add Ti.UI.createImageView
+      url: data.url
+      left: 1
+      height: 48
+      width: 48
+    row.add Ti.UI.createLabel
+      text: data.created_at
+      left: 55
+      width: 230
+    return row
+
+  _onSuccess = (status, hash)->
+    rows = []
+    for image in hash.images
+      rows.push _createRow(image)
+    tableView.setData rows
+    return
+
+  _onSuccessDelete = (status, hash)->
+    if status isnt 204
+      alert 'Can not delete image.'
+      _updateTable()
+    return
+
+  _onSuccessUploadImage = (status, hash)->
+    console.log status
+    console.log hash
+    return
+
+  _onSuccessGetUploadParameters = (status, hash)->
+    console.log status
+    console.log hash
+    network = new Network({success: _onSuccessUploadImage})
+    hash.image.upload_parameters.fields['file'] = imageBlob
+    console.log hash.image.upload_parameters.fields
+    network.request 'UPLOAD', hash.image.upload_parameters.url, hash.image.upload_parameters.fields
+    return
+
+  _onSuccessSelectImage = (event)->
+    network = new Network({success: _onSuccessGetUploadParameters})
+    network.request 'POST', "#{GLOBAL.API_URL}/images", {auth_token: GLOBAL.user.auth_token}
+    return
+
+  _updateTable = ()->
+    network = new Network({success: _onSuccess})
+    network.request 'GET', "#{GLOBAL.API_URL}/images", {auth_token: GLOBAL.user.auth_token}
+    return
+
+  _openPhotoGallery = ()->
+    options =
+      mediaTypes:[Ti.Media.MEDIA_TYPE_PHOTO]
+      success: (e)=>
+        if e.mediaType == Ti.Media.MEDIA_TYPE_PHOTO
+          imageBlob = e.media.imageAsResized(96, 96)
+          _onSuccessSelectImage()
+        return        
+      cancel: ()->
+        return
+      error: (e)->
+        if !e.success and e.code is 1
+          setTimeout _openPhotoGallery, 10
+        else
+          alert 'Error opening gallery'
+        return
+    Ti.Media.openPhotoGallery options
     return
 
 # Eventlisters
 
-  row.addEventListener 'click',(e) ->
-    Ti.Platform.openURL("http://#{GLOBAL.HOST}/auth/facebook")
+  tableView.addEventListener 'delete',(e) ->
+    network = new Network({success: _onSuccessDelete})
+    network.request 'DELETE', "#{GLOBAL.API_URL}/images/#{e.row.id}", {auth_token: GLOBAL.user.auth_token}
     return
 
   window.addEventListener 'focus', (e) ->
-    _updateRowTitle()
+    _updateTable()
+    return
+
+  photoButton.addEventListener 'click', (e) ->
+    _openPhotoGallery()
     return
 
   return window

@@ -3,36 +3,125 @@
   var createWindow;
 
   createWindow = function(tab) {
-    var GLOBAL, Network, row, table, window, _updateRowTitle;
+    var GLOBAL, Network, imageBlob, photoButton, tableView, window, _createRow, _onSuccess, _onSuccessDelete, _onSuccessGetUploadParameters, _onSuccessSelectImage, _onSuccessUploadImage, _openPhotoGallery, _updateTable;
     Network = require('js/lib/Network');
     GLOBAL = require('js/lib/global');
+    imageBlob = null;
     window = Titanium.UI.createWindow({
       title: 'Login'
     });
-    table = Ti.UI.createTableView({
-      style: Ti.UI.iPhone.TableViewStyle.GROUPED,
-      rowHeight: 44
+    photoButton = Ti.UI.createButton({
+      systemButton: Titanium.UI.iPhone.SystemButton.CAMERA
     });
-    window.add(table);
-    row = Ti.UI.createTableViewRow({
-      title: 'Login via Facebook',
-      color: 'green'
+    window.setRightNavButton(photoButton);
+    tableView = Ti.UI.createTableView({
+      editable: true,
+      rowHeight: 50
     });
-    table.setData([row]);
-    _updateRowTitle = function() {
-      if (Ti.App.Properties.getBool('is_logged_in')) {
-        row.title = 'Logout';
-        row.color = 'green';
-      } else {
-        row.title = 'Login via Facebook';
-        row.color = 'red';
+    window.add(tableView);
+    _createRow = function(data) {
+      var row;
+      row = Ti.UI.createTableViewRow({
+        id: data.id
+      });
+      row.add(Ti.UI.createImageView({
+        url: data.url,
+        left: 1,
+        height: 48,
+        width: 48
+      }));
+      row.add(Ti.UI.createLabel({
+        text: data.created_at,
+        left: 55,
+        width: 230
+      }));
+      return row;
+    };
+    _onSuccess = function(status, hash) {
+      var image, rows, _i, _len, _ref;
+      rows = [];
+      _ref = hash.images;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        image = _ref[_i];
+        rows.push(_createRow(image));
+      }
+      tableView.setData(rows);
+    };
+    _onSuccessDelete = function(status, hash) {
+      if (status !== 204) {
+        alert('Can not delete image.');
+        _updateTable();
       }
     };
-    row.addEventListener('click', function(e) {
-      Ti.Platform.openURL("http://" + GLOBAL.HOST + "/auth/facebook");
+    _onSuccessUploadImage = function(status, hash) {
+      console.log(status);
+      console.log(hash);
+    };
+    _onSuccessGetUploadParameters = function(status, hash) {
+      var network;
+      console.log(status);
+      console.log(hash);
+      network = new Network({
+        success: _onSuccessUploadImage
+      });
+      hash.image.upload_parameters.fields['file'] = imageBlob;
+      console.log(hash.image.upload_parameters.fields);
+      network.request('UPLOAD', hash.image.upload_parameters.url, hash.image.upload_parameters.fields);
+    };
+    _onSuccessSelectImage = function(event) {
+      var network;
+      network = new Network({
+        success: _onSuccessGetUploadParameters
+      });
+      network.request('POST', "" + GLOBAL.API_URL + "/images", {
+        auth_token: GLOBAL.user.auth_token
+      });
+    };
+    _updateTable = function() {
+      var network;
+      network = new Network({
+        success: _onSuccess
+      });
+      network.request('GET', "" + GLOBAL.API_URL + "/images", {
+        auth_token: GLOBAL.user.auth_token
+      });
+    };
+    _openPhotoGallery = function() {
+      var options,
+        _this = this;
+      options = {
+        mediaTypes: [Ti.Media.MEDIA_TYPE_PHOTO],
+        success: function(e) {
+          if (e.mediaType === Ti.Media.MEDIA_TYPE_PHOTO) {
+            imageBlob = e.media.imageAsResized(96, 96);
+            _onSuccessSelectImage();
+          }
+        },
+        cancel: function() {},
+        error: function(e) {
+          if (!e.success && e.code === 1) {
+            setTimeout(_openPhotoGallery, 10);
+          } else {
+            alert('Error opening gallery');
+          }
+        }
+      };
+      Ti.Media.openPhotoGallery(options);
+    };
+    tableView.addEventListener('delete', function(e) {
+      var network;
+      network = new Network({
+        success: _onSuccessDelete
+      });
+      network.request('DELETE', "" + GLOBAL.API_URL + "/images/" + e.row.id, {
+        auth_token: GLOBAL.user.auth_token
+      });
     });
     window.addEventListener('focus', function(e) {
-      _updateRowTitle();
+      _updateTable();
+    });
+    photoButton.addEventListener('click', function(e) {
+      _openPhotoGallery();
     });
     return window;
   };

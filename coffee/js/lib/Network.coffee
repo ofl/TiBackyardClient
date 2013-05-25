@@ -3,7 +3,8 @@ utils = require 'js/lib/utils'
 class Network
   constructor: (option) ->
     _success = option.success || ()-> return
-    _error = option.error || (status, errors)-> console.log "#{status}:#{errors.join(',')}"; return
+    # _error = option.error || (status, errors)-> console.log "#{status}:#{errors.join(',')}"; return
+    _error = option.error || (status, errors)-> console.log "#{status}:#{errors}"; return
     _progress = option.progress || ()-> return
     _onreadystatechange = option.onreadystatechange || ()-> return
 
@@ -17,6 +18,7 @@ class Network
         
     # status code 200 ~ 399
     @xhr.onload = ()->
+      console.log this.responseText
       try
         status_code = that.xhr.status
         console.log this.responseText
@@ -34,6 +36,7 @@ class Network
       
     # status code 400 ~ , network error, timeout.. 
     @xhr.onerror = (e)->
+      console.log this.responseText
       console.log e.error
       try
         status_code = that.xhr.status
@@ -70,8 +73,13 @@ class Network
     @xhr.open 'POST', url
     if method isnt 'POST'
       @xhr.setRequestHeader("X-Http-Method-Override", method)
-    @xhr.setRequestHeader("content-type", "application/json")
+    @xhr.setRequestHeader("Content-Type", "application/json")
     @xhr.send(JSON.stringify data)
+    return
+
+  requestUpload: (url, data)->
+    @xhr.open 'POST', url
+    @xhr.send(data)
     return
   
   requestDownload: (url, path)->
@@ -93,6 +101,8 @@ class Network
     switch method
       when 'POST', 'PUT', 'DELETE'
         @requestPost url, data, method
+      when 'UPLOAD'
+        @requestUpload url, data
       when 'DOWNLOAD'
         @requestDownload url, path
       else
