@@ -86,7 +86,15 @@
       title: 'XML',
       url: "" + GLOBAL.API_URL + "/tests",
       data: {
-        status: 415,
+        format_test: 'xml',
+        auth_token: GLOBAL.user.auth_token
+      }
+    }));
+    rows.push(Ti.UI.createTableViewRow({
+      title: 'TEXT',
+      url: "" + GLOBAL.API_URL + "/tests",
+      data: {
+        format_test: 'text',
         auth_token: GLOBAL.user.auth_token
       }
     }));

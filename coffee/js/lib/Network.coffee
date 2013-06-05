@@ -13,17 +13,28 @@ class Network
       hide: ()-> return
     }
 
+    _responseToObject = (that)->
+      data = null
+      contentType = that.xhr.getResponseHeader('Content-Type')
+      if contentType.indexOf('application/json') is 0
+        data = JSON.parse(this.responseText)
+      else if contentType.indexOf('application/xml') is 0
+        data = {xml: this.responseXML}
+      else if contentType.indexOf('text') is 0
+        data =  {text: this.responseText}
+      else
+        data =  {data: this.responseData}
+      return data
+
     @xhr = Ti.Network.createHTTPClient()
-    @xhr.setTimeout 5000
+    @xhr.setTimeout 10000
         
     # status code 200 ~ 399
     @xhr.onload = ()->
-      console.log this.responseText
       try
         status_code = that.xhr.status
-        console.log this.responseText
         if status_code isnt 204
-          _success status_code, JSON.parse(this.responseText)
+          _success status_code, _responseToObject.call(this, that)
         else
           _success status_code, {}
       catch err
@@ -36,21 +47,18 @@ class Network
       
     # status code 400 ~ , network error, timeout.. 
     @xhr.onerror = (e)->
-      console.log this.responseText
       console.log e.error
-      try
-        status_code = that.xhr.status
-        if status_code
-          json = JSON.parse(this.responseText)
-        else
-          json = {success: false, errors: [e.error]}
-        _error status_code, json
-      catch err
-        console.log err
-        _error null, {success: false, errors: [err.message]}
-      finally
-        that.indicator.hide()
-        that.release()
+      if e.error is 'HTTP error'
+        try
+          _error that.xhr.status, _responseToObject.call(this, that)
+        catch err
+          console.log err
+          _error null, {success: false, errors: [err.message]}
+        finally
+          that.indicator.hide()
+          that.release()
+      else
+        _error null, {success: false, errors: [e.error]}
       return
       
     @xhr.ondatastream = (e)-> 

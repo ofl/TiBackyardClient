@@ -25,7 +25,7 @@ createWindow = (tab) ->
     row = Ti.UI.createTableViewRow
       id: data.id
     row.add Ti.UI.createImageView
-      url: data.url
+      image: data.url
       left: 1
       height: 48
       width: 48
@@ -36,6 +36,7 @@ createWindow = (tab) ->
     return row
 
   _onSuccess = (status, hash)->
+    console.log hash
     rows = []
     for image in hash.images
       rows.push _createRow(image)
@@ -49,16 +50,12 @@ createWindow = (tab) ->
     return
 
   _onSuccessUploadImage = (status, hash)->
-    console.log status
-    console.log hash
     return
 
   _onSuccessGetUploadParameters = (status, hash)->
-    console.log status
     console.log hash
     network = new Network({success: _onSuccessUploadImage})
     hash.image.upload_parameters.fields['file'] = imageBlob
-    console.log hash.image.upload_parameters.fields
     network.request 'UPLOAD', hash.image.upload_parameters.url, hash.image.upload_parameters.fields
     return
 

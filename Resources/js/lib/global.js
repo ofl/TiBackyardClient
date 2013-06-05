@@ -28,7 +28,7 @@
       name: null,
       email: null,
       auth_token: null,
-      device_token: Ti.Platform.getId()
+      device_token: null
     };
   }
 

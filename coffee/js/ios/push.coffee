@@ -5,38 +5,33 @@ createWindow = (tab) ->
 # UI
 
   window = Titanium.UI.createWindow
-    title: 'Login'
+    title: 'Push Notification'
 
-  table = Ti.UI.createTableView
+  tableView = Ti.UI.createTableView
     style: Ti.UI.iPhone.TableViewStyle.GROUPED
     rowHeight: 44  
-  window.add(table)
+  window.add(tableView)
 
   row = Ti.UI.createTableViewRow
-    title: 'Login via Facebook'
-    color: 'green'
+    title: 'Push Notification'
 
-  table.setData [row]
+  tableView.setData [row]
 
 # Functions
 
-  _updateRowTitle = ()->
-    if Ti.App.Properties.getBool 'is_logged_in'
-      row.title = 'Logout'
-      row.color = 'green'
-    else
-      row.title = 'Login via Facebook'
-      row.color = 'red'
+  _onSuccess = (status, hash)->
+    if status isnt 204
+      alert 'Can not send Push Notification'
     return
+
 
 # Eventlisters
 
   row.addEventListener 'click',(e) ->
-    Ti.Platform.openURL("http://#{GLOBAL.HOST}/auth/facebook")
-    return
-
-  window.addEventListener 'focus', (e) ->
-    _updateRowTitle()
+    network = new Network({success: _onSuccess})
+    network.request 'POST', "#{GLOBAL.API_URL}/users/test_apns", {
+      auth_token: GLOBAL.user.auth_token
+    }
     return
 
   return window

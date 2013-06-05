@@ -25,7 +25,7 @@
         id: data.id
       });
       row.add(Ti.UI.createImageView({
-        url: data.url,
+        image: data.url,
         left: 1,
         height: 48,
         width: 48
@@ -39,6 +39,7 @@
     };
     _onSuccess = function(status, hash) {
       var image, rows, _i, _len, _ref;
+      console.log(hash);
       rows = [];
       _ref = hash.images;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -53,19 +54,14 @@
         _updateTable();
       }
     };
-    _onSuccessUploadImage = function(status, hash) {
-      console.log(status);
-      console.log(hash);
-    };
+    _onSuccessUploadImage = function(status, hash) {};
     _onSuccessGetUploadParameters = function(status, hash) {
       var network;
-      console.log(status);
       console.log(hash);
       network = new Network({
         success: _onSuccessUploadImage
       });
       hash.image.upload_parameters.fields['file'] = imageBlob;
-      console.log(hash.image.upload_parameters.fields);
       network.request('UPLOAD', hash.image.upload_parameters.url, hash.image.upload_parameters.fields);
     };
     _onSuccessSelectImage = function(event) {

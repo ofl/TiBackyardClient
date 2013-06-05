@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ti:app xmlns:ti="http://ti.appcelerator.org">
-	<id>jp.covered.tibackyardclient</id>
+	<id>jp.coverd.backyardclient</id>
 	<name>TiBackyardClient</name>
 	<version>1.0</version>
 	<publisher>not specified</publisher>

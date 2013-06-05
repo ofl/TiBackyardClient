@@ -6,7 +6,8 @@ api_version = 1
 if Ti.Platform.model is 'Simulator'
   host = 'localhost:3000'
 else
-  host = '192.168.11.5:3000'
+  # host = '192.168.11.5:3000'
+  host = 'www.your_domain.com'
 
 GLOBAL.HOST = host
 GLOBAL.API_URL = "http://#{host}/api/v#{api_version}"
@@ -21,7 +22,7 @@ else
     name: null
     email: null
     auth_token: null
-    device_token: Ti.Platform.getId()
+    device_token: null
   }
 
 module.exports = GLOBAL

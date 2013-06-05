@@ -3,9 +3,10 @@
   var createWindow;
 
   createWindow = function(tab) {
-    var GLOBAL, Network, loginRow, tableView, window, _logOut, _updateRowTitle;
+    var GLOBAL, Network, authTokenRow, loginRow, tableView, utils, window, _logOut, _onSuccessGetAuthToken, _updateRowTitle;
     Network = require('js/lib/Network');
     GLOBAL = require('js/lib/global');
+    utils = require('js/lib/utils');
     window = Titanium.UI.createWindow({
       title: 'Login'
     });
@@ -18,7 +19,10 @@
       title: 'Login via Facebook',
       color: 'green'
     });
-    tableView.setData([loginRow]);
+    authTokenRow = Ti.UI.createTableViewRow({
+      title: 'Get Auth Token'
+    });
+    tableView.setData([loginRow, authTokenRow]);
     _updateRowTitle = function() {
       if (Ti.App.Properties.getBool('is_logged_in')) {
         loginRow.title = 'Logout';
@@ -36,6 +40,15 @@
         alert(json.errors.join('\n'));
       }
     };
+    _onSuccessGetAuthToken = function(status, json) {
+      if (status) {
+        Ti.App.Properties.setBool('is_logged_in', true);
+        GLOBAL.user.auth_token = json.auth_token;
+        utils.saveUserData();
+      } else {
+        alert(json.errors.join('\n'));
+      }
+    };
     loginRow.addEventListener('click', function(e) {
       var network, url;
       if (Ti.App.Properties.getBool('is_logged_in')) {
@@ -49,6 +62,14 @@
       } else {
         Ti.Platform.openURL("http://" + GLOBAL.HOST + "/auth/facebook");
       }
+    });
+    authTokenRow.addEventListener('click', function(e) {
+      var network, url;
+      network = new Network({
+        success: _onSuccessGetAuthToken
+      });
+      url = "" + GLOBAL.API_URL + "/tests/get_auth_token";
+      network.request('GET', url);
     });
     window.addEventListener('focus', function(e) {
       _updateRowTitle();

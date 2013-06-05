@@ -1,6 +1,7 @@
 createWindow = (tab) ->
   Network = require 'js/lib/Network'
   GLOBAL = require 'js/lib/global'
+  utils = require 'js/lib/utils'
 
 # UI
 
@@ -16,7 +17,10 @@ createWindow = (tab) ->
     title: 'Login via Facebook'
     color: 'green'
 
-  tableView.setData [loginRow]
+  authTokenRow = Ti.UI.createTableViewRow
+    title: 'Get Auth Token'
+
+  tableView.setData [loginRow, authTokenRow]
 
 # Functions
 
@@ -37,6 +41,15 @@ createWindow = (tab) ->
       alert json.errors.join('\n')
     return
 
+  _onSuccessGetAuthToken = (status, json)->
+    if status
+      Ti.App.Properties.setBool 'is_logged_in', true
+      GLOBAL.user.auth_token = json.auth_token
+      utils.saveUserData()
+    else
+      alert json.errors.join('\n')
+    return
+
 # Eventlisters
 
   loginRow.addEventListener 'click',(e) ->
@@ -48,6 +61,14 @@ createWindow = (tab) ->
       network.request 'DELETE', url, {auth_token: GLOBAL.user.auth_token}      
     else
       Ti.Platform.openURL("http://#{GLOBAL.HOST}/auth/facebook")
+    return
+
+  authTokenRow.addEventListener 'click',(e) ->
+    network = new Network({
+      success: _onSuccessGetAuthToken
+      })
+    url = "#{GLOBAL.API_URL}/tests/get_auth_token"
+    network.request 'GET', url 
     return
 
   window.addEventListener 'focus', (e) ->

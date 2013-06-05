@@ -7,7 +7,7 @@
   Network = (function() {
 
     function Network(option) {
-      var that, _error, _onreadystatechange, _progress, _success;
+      var that, _error, _onreadystatechange, _progress, _responseToObject, _success;
       _success = option.success || function() {};
       _error = option.error || function(status, errors) {
         console.log("" + status + ":" + errors);
@@ -18,16 +18,35 @@
         show: function() {},
         hide: function() {}
       };
+      _responseToObject = function(that) {
+        var contentType, data;
+        data = null;
+        contentType = that.xhr.getResponseHeader('Content-Type');
+        if (contentType.indexOf('application/json') === 0) {
+          data = JSON.parse(this.responseText);
+        } else if (contentType.indexOf('application/xml') === 0) {
+          data = {
+            xml: this.responseXML
+          };
+        } else if (contentType.indexOf('text') === 0) {
+          data = {
+            text: this.responseText
+          };
+        } else {
+          data = {
+            data: this.responseData
+          };
+        }
+        return data;
+      };
       this.xhr = Ti.Network.createHTTPClient();
-      this.xhr.setTimeout(5000);
+      this.xhr.setTimeout(10000);
       this.xhr.onload = function() {
         var status_code;
-        console.log(this.responseText);
         try {
           status_code = that.xhr.status;
-          console.log(this.responseText);
           if (status_code !== 204) {
-            _success(status_code, JSON.parse(this.responseText));
+            _success(status_code, _responseToObject.call(this, that));
           } else {
             _success(status_code, {});
           }
@@ -43,29 +62,25 @@
         }
       };
       this.xhr.onerror = function(e) {
-        var json, status_code;
-        console.log(this.responseText);
         console.log(e.error);
-        try {
-          status_code = that.xhr.status;
-          if (status_code) {
-            json = JSON.parse(this.responseText);
-          } else {
-            json = {
+        if (e.error === 'HTTP error') {
+          try {
+            _error(that.xhr.status, _responseToObject.call(this, that));
+          } catch (err) {
+            console.log(err);
+            _error(null, {
               success: false,
-              errors: [e.error]
-            };
+              errors: [err.message]
+            });
+          } finally {
+            that.indicator.hide();
+            that.release();
           }
-          _error(status_code, json);
-        } catch (err) {
-          console.log(err);
+        } else {
           _error(null, {
             success: false,
-            errors: [err.message]
+            errors: [e.error]
           });
-        } finally {
-          that.indicator.hide();
-          that.release();
         }
       };
       this.xhr.ondatastream = function(e) {

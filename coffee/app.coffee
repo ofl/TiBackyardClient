@@ -1,5 +1,6 @@
 GLOBAL = require 'js/lib/global'
 utils = require 'js/lib/utils'
+apns = require('js/lib/push_notifications')
 
 tab1 = Ti.UI.createTab  
   icon:'img/039-IM@2x.png',
@@ -52,5 +53,6 @@ _openedByUrlScheme = ()->
 Ti.App.addEventListener 'resumed', _openedByUrlScheme
 
 _openedByUrlScheme()
+apns()
 
 tabGroup.open()

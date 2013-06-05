@@ -3,36 +3,34 @@
   var createWindow;
 
   createWindow = function(tab) {
-    var GLOBAL, Network, row, table, window, _updateRowTitle;
+    var GLOBAL, Network, row, tableView, window, _onSuccess;
     Network = require('js/lib/Network');
     GLOBAL = require('js/lib/global');
     window = Titanium.UI.createWindow({
-      title: 'Login'
+      title: 'Push Notification'
     });
-    table = Ti.UI.createTableView({
+    tableView = Ti.UI.createTableView({
       style: Ti.UI.iPhone.TableViewStyle.GROUPED,
       rowHeight: 44
     });
-    window.add(table);
+    window.add(tableView);
     row = Ti.UI.createTableViewRow({
-      title: 'Login via Facebook',
-      color: 'green'
+      title: 'Push Notification'
     });
-    table.setData([row]);
-    _updateRowTitle = function() {
-      if (Ti.App.Properties.getBool('is_logged_in')) {
-        row.title = 'Logout';
-        row.color = 'green';
-      } else {
-        row.title = 'Login via Facebook';
-        row.color = 'red';
+    tableView.setData([row]);
+    _onSuccess = function(status, hash) {
+      if (status !== 204) {
+        alert('Can not send Push Notification');
       }
     };
     row.addEventListener('click', function(e) {
-      Ti.Platform.openURL("http://" + GLOBAL.HOST + "/auth/facebook");
-    });
-    window.addEventListener('focus', function(e) {
-      _updateRowTitle();
+      var network;
+      network = new Network({
+        success: _onSuccess
+      });
+      network.request('POST', "" + GLOBAL.API_URL + "/users/test_apns", {
+        auth_token: GLOBAL.user.auth_token
+      });
     });
     return window;
   };
